@@ -106,65 +106,68 @@ namespace Selenium_HT2
 			var productName = addToCartItemJson.GetValue("name").ToString();
 			var price = Int32.Parse(addToCartItemJson.GetValue("price").ToString());
 			buyButton.Click();
+			
 			var wait =
 				new WebDriverWait(driver, TimeSpan.FromSeconds(10))
 				{
 					PollingInterval = TimeSpan.FromSeconds(2),
 				};
 			wait.IgnoreExceptionTypes(typeof(NoSuchElementException));
+			
 			var add = new Random().Next(2, 10);
 			var sub = new Random().Next(1, add);
-			var delay = new WebDriverWait(driver, TimeSpan.FromSeconds(3));
-			var prevSpanText = delay.Until(w =>
+			var prevSpanText = wait.Until(w =>
 				w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']"))
 					.GetAttribute("innerHTML"));
-
+			var totalExpected = price;
+			
 			for (var i = 0; i < add; i++)
 			{
-				var plusButton = wait.Until(w =>
-					w.FindElement(By.XPath("//span[@class = 'js_plus btn-count btn-count--plus ']")));
+				wait.Until(w =>
+					w.FindElement(By.XPath("//span[@class = 'js_plus btn-count btn-count--plus ']"))).Click();
 
-				plusButton.Click();
-				delay.Until(w=>w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']")).Enabled);
-				var newSpanText = delay.Until(w =>
+				var newSpanText = wait.Until(w =>
 					w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']"))
 						.GetAttribute("innerHTML"));
+				Console.WriteLine(newSpanText);
 				while (newSpanText==prevSpanText)
 				{
-					newSpanText = delay.Until(w =>
+					newSpanText = wait.Until(w =>
 						w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']"))
 							.GetAttribute("innerHTML"));
 				}
 
 				prevSpanText = newSpanText;
+				var totalSpan = wait.Until(w =>
+					w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']")).GetAttribute("innerHTML").Split(" ")[0]);
+				totalExpected += price;
+				Assert.True(int.Parse(totalSpan)==totalExpected);
 			}
-			var totalSpan = wait.Until(w =>
-				w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']")).GetAttribute("innerHTML").Split(" ")[0]);
-			var totalExpected = price * (add + 1);
-			Assert.True(int.Parse(totalSpan)==totalExpected);
 			for (var i = 0; i < sub; i++)
 			{
 				var minusButton = wait.Until(w =>
 					w.FindElement(By.XPath("//span[@class = 'js_minus btn-count btn-count--minus ']")));
 				minusButton.Click();
-				delay.Until(w=>w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']")).Enabled);
-				var newSpanText = delay.Until(w =>
+				wait.Until(w=>w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']")).Enabled);
+				var newSpanText = wait.Until(w =>
 					w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']"))
 						.GetAttribute("innerHTML"));
 				while (newSpanText==prevSpanText)
 				{
-					newSpanText = delay.Until(w =>
+					newSpanText = wait.Until(w =>
 						w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']"))
 							.GetAttribute("innerHTML"));
 				}
 
 				prevSpanText = newSpanText;
-			}
-			var ntotalSpan = wait.Until(w =>
-				w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']")).GetAttribute("innerHTML").Split(" ")[0]);
+				
+				
+				var ntotalSpan = wait.Until(w =>
+					w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']")).GetAttribute("innerHTML").Split(" ")[0]);
 
-			totalExpected -= price * sub;
-			Assert.True(int.Parse(ntotalSpan)==totalExpected);
+				totalExpected -= price;
+				Assert.True(int.Parse(ntotalSpan)==totalExpected);
+			}
 		} 
 	}
 }

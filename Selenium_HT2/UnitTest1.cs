@@ -103,7 +103,6 @@ namespace Selenium_HT2
 			var buttonData = buyButton.GetDomAttribute("data-ecomm-cart");
 			var addToCartItemJson = (JObject)JsonConvert.DeserializeObject(buttonData);
 			Debug.Assert(addToCartItemJson != null, nameof(addToCartItemJson) + " != null");
-			var productName = addToCartItemJson.GetValue("name").ToString();
 			var price = Int32.Parse(addToCartItemJson.GetValue("price").ToString());
 			buyButton.Click();
 			
@@ -112,7 +111,7 @@ namespace Selenium_HT2
 				{
 					PollingInterval = TimeSpan.FromSeconds(2),
 				};
-			wait.IgnoreExceptionTypes(typeof(NoSuchElementException));
+			wait.IgnoreExceptionTypes( typeof(NoSuchElementException), typeof(StaleElementReferenceException));
 			
 			var add = new Random().Next(2, 10);
 			var sub = new Random().Next(1, add);
@@ -129,7 +128,6 @@ namespace Selenium_HT2
 				var newSpanText = wait.Until(w =>
 					w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']"))
 						.GetAttribute("innerHTML"));
-				Console.WriteLine(newSpanText);
 				while (newSpanText==prevSpanText)
 				{
 					newSpanText = wait.Until(w =>

@@ -14,6 +14,13 @@ namespace Selenium_HT2
 		private const string DestinationUrl = @"https://avic.ua/";
 		private const string MonitorsUrl = @"https://avic.ua/ua/monitoryi";
 		private const string HeatersUrl = @"https://avic.ua/ua/obogrevateli";
+		private IWebDriver driver;
+
+		[SetUp]
+		public void SetUp()
+		{
+			driver = new ChromeDriver();
+		}
 		
 		[Test]
 		public void PopupAppears()
@@ -21,21 +28,17 @@ namespace Selenium_HT2
 			var xpathtoclosepopup = @"//div[@id='js_popUp']/button[@title = 'Close']";
 			var linkToPromo = @"/ua/back-to-school-skidki-do-50";
 			
-			IWebDriver driver = new ChromeDriver();
 			driver.Navigate().GoToUrl(DestinationUrl);
-			//Assert.IsTrue(driver.Url.Contains("avic"), "");
 			var popup = (new WebDriverWait(driver, TimeSpan.FromMinutes(1))).Until(element => element.FindElement(By.XPath(@"//div[@id='js_popUp']")));
 			Assert.NotNull(popup);
 			Assert.AreEqual( driver.FindElement(By.XPath(@"//div[@id='js_popUp']/a[@href = '/ua/back-to-school-skidki-do-50']")), popup.FindElement(By.TagName("a")));
 			var closeButton = (new WebDriverWait(driver, TimeSpan.FromSeconds(60))).Until(e=>popup.FindElement(By.TagName("button")));
 			closeButton.Click();
-			driver.Quit();
 		}
 
 		[Test]
 		public void NavigateThroughMenuToHeaters()
 		{
-			IWebDriver driver = new ChromeDriver();
 			driver.Manage().Window.Maximize();
 			driver.Navigate().GoToUrl(DestinationUrl);
 			var wait =
@@ -57,13 +60,11 @@ namespace Selenium_HT2
 			toFourthPage.Click();
 
 			Assert.AreEqual(HeatersUrl, driver.Url);
-			driver.Quit();
 		}
 		
 		[Test]
 		public void AddToCartOneItem()
 		{
-			IWebDriver driver = new ChromeDriver();
 			driver.Manage().Window.Maximize();
 			driver.Navigate().GoToUrl(MonitorsUrl);
 			var buyButton =
@@ -88,13 +89,11 @@ namespace Selenium_HT2
 			Assert.AreEqual(addToCartItemJson, inCartItemJson);
 			Assert.NotNull(inCartItemJson.GetValue("name"));
 			Assert.AreEqual(productName, inCartItemJson.GetValue("name").ToString());
-			driver.Quit();
 		}
 
 		[Test]
 		public void PriceCalculatedProperly()
 		{
-			IWebDriver driver = new ChromeDriver();
 			driver.Manage().Window.Maximize();
 			driver.Navigate().GoToUrl(MonitorsUrl);
 			var buyButton =
@@ -103,7 +102,7 @@ namespace Selenium_HT2
 			var buttonData = buyButton.GetDomAttribute("data-ecomm-cart");
 			var addToCartItemJson = (JObject)JsonConvert.DeserializeObject(buttonData);
 			Debug.Assert(addToCartItemJson != null, nameof(addToCartItemJson) + " != null");
-			var price = Int32.Parse(addToCartItemJson.GetValue("price").ToString());
+			var price = int.Parse(addToCartItemJson.GetValue("price").ToString());
 			buyButton.Click();
 			
 			var wait =
@@ -141,16 +140,19 @@ namespace Selenium_HT2
 				totalExpected += price;
 				Assert.True(int.Parse(totalSpan)==totalExpected);
 			}
+
 			for (var i = 0; i < sub; i++)
 			{
 				var minusButton = wait.Until(w =>
 					w.FindElement(By.XPath("//span[@class = 'js_minus btn-count btn-count--minus ']")));
 				minusButton.Click();
-				wait.Until(w=>w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']")).Enabled);
+				wait.Until(w =>
+					w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']")).Enabled);
 				var newSpanText = wait.Until(w =>
 					w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']"))
 						.GetAttribute("innerHTML"));
-				while (newSpanText==prevSpanText)
+
+				while (newSpanText == prevSpanText)
 				{
 					newSpanText = wait.Until(w =>
 						w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']"))
@@ -158,14 +160,21 @@ namespace Selenium_HT2
 				}
 
 				prevSpanText = newSpanText;
-				
-				
+
+
 				var ntotalSpan = wait.Until(w =>
-					w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']")).GetAttribute("innerHTML").Split(" ")[0]);
+					w.FindElement(By.XPath(@"//div[@class = 'item-total']/span[@class = 'prise']"))
+						.GetAttribute("innerHTML").Split(" ")[0]);
 
 				totalExpected -= price;
-				Assert.True(int.Parse(ntotalSpan)==totalExpected);
+				Assert.True(int.Parse(ntotalSpan) == totalExpected);
 			}
-		} 
+		}
+
+		[TearDown]
+		public void TearDown()
+		{
+			driver.Quit();
+		}
 	}
 }
